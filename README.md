@@ -23,7 +23,8 @@ python compare_results.py results/observed results/reproduced
 
 For a single isolated command that also runs the certificate CLI, all retained
 pilots, the exhaustive frontier audit, the restricted negative-certificate
-regression, the full fixed-interpreter cross-check, and JSON/CSV parsing, use:
+regression, the full fixed-interpreter cross-check, the strict frontier-certificate
+integer-contract regression, and JSON/CSV parsing, use:
 
 ```sh
 python verify.py
@@ -38,11 +39,19 @@ compares the deque-based producer with the location/timestamp checker on every o
 of the 51 fixed cases: all 35,216 event records (as multisets) and 107,400
 query-coefficient cells must agree.
 
+`tests/frontier_integer_contract.py` separately checks that a valid F03 certificate
+still decodes query 0 at departure frontier 22, while JSON floats, booleans,
+malformed pairs, and out-of-range values in `merge_word`, `required`, `cuts`,
+witness cuts, witness query/time fields, and `earliest_failure` are rejected before
+numeric decoding. These directed checks are additional regressions; they do not
+change the retained count of 23 campaign mutations or two incomplete controls.
+
 The output directory must be new. The expected result is
 `all_finite_checks_passed`: 51 fixed-schedule, eight symbolic-frontier and 19
 restricted-support main cases; 51 adequate and 27 insufficient eligible
 libraries; a separate exhaustive audit of 32 micro-models, 3,250 concrete
-color/service traces and all 13,644 ambient candidate comparisons; 99,212 charged
+color/service traces and all 13,644 trace-candidate comparisons across 118
+(model, candidate cut-set) pairs; 99,212 charged
 obligations in total; zero oracle/audit disagreements; 23 rejected
 certificate/schema mutations and two incomplete transition-limit controls. The
 comparison requires all deterministic scientific JSON and table content to match. It deliberately excludes timings and memory, not witnesses or decisions.

@@ -2,6 +2,13 @@
   "controls": {
     "control_count": 25,
     "frontier_earlier_declared_query_check": "explicitly replayed and charged",
+    "frontier_strict_integer_contract_regression": {
+      "baseline_frontier03_decoded": 22,
+      "baseline_frontier03_states": 72,
+      "baseline_frontier07_states": 1553,
+      "scope": "directed implementation regression; separate from the 23 retained campaign mutations",
+      "strict_mutations_rejected": 30
+    },
     "incomplete_resource_controls": 2,
     "rejected_certificate_or_schema_mutations": 23,
     "restricted_negative_certificate_regression": "accepted genuine insufficiency and rejected forged insufficiency"
@@ -39,6 +46,7 @@
   "exhaustive_micro_audit": {
     "abstract_query_evaluations": 17458,
     "candidate_comparisons": 13644,
+    "candidate_pairs": 118,
     "cases": [
       {
         "abstract_query_evaluations": 512,
@@ -2013,7 +2021,7 @@
   },
   "standalone_verifier": {
     "captured_stderr_bytes": 0,
-    "command_count": 15,
+    "command_count": 16,
     "commands": [
       {
         "command": "python -m compileall -q .",
@@ -2123,6 +2131,13 @@
         "expected_marker": "all_fixed_interpreter_audits_passed",
         "returncode": 0,
         "stderr_bytes": 0
+      },
+      {
+        "command": "python tests/frontier_integer_contract.py",
+        "environment_overrides": {},
+        "expected_marker": "strict_frontier_integer_contract_passed",
+        "returncode": 0,
+        "stderr_bytes": 0
       }
     ],
     "isolation": "temporary repository copy",
@@ -2130,10 +2145,10 @@
     "production_python_files_parsed": 18,
     "resource_measurement": {
       "exit_status": 0,
-      "max_rss_kib": 109868,
-      "system_seconds": 1.33,
-      "user_seconds": 17.0,
-      "wall_clock": "0:12.03"
+      "max_rss_kib": 109356,
+      "system_seconds": 1.21,
+      "user_seconds": 16.45,
+      "wall_clock": "0:11.17"
     },
     "status": "all_documented_checks_passed",
     "temporary_csv_files_parsed": 8,
@@ -2161,6 +2176,6 @@
     "standalone_archive_single_root": "precision-minimal-count-abstractions",
     "tex_intermediate_files": 0
   },
-  "verification_context": "The verifier and paper build were executed from clean working copies assembled from the delivery archives. After this report is installed, the final archives are recreated, re-extracted, and all documented checks are rerun without modifying this report.",
-  "verification_date": "2026-09-19"
+  "verification_context": "The verifier and paper build were executed from an isolated working copy. After this report is installed, the final archives are recreated, re-extracted, and the documented checks are rerun without modifying retained scientific results.",
+  "verification_date": "2026-09-25"
 }

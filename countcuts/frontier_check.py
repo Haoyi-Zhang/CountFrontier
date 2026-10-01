@@ -22,6 +22,56 @@ def integer(x: Any, lo: int, hi: int) -> bool:
     return type(x) is int and lo <= x <= hi
 
 
+def validate_merge_word(c: dict[str, Any], value: Any) -> None:
+    """Require JSON-array token identities with strict bounded integer indices."""
+    lengths = c['lengths']
+    require(type(value) is list and len(value) == sum(lengths), 'merge word encoding')
+    seen: set[tuple[int, int]] = set()
+    for token in value:
+        require(type(token) is list and len(token) == 2, 'merge token encoding')
+        source = token[0]
+        require(integer(source, 0, len(lengths)-1), 'merge source index')
+        rank = token[1]
+        require(integer(rank, 0, lengths[source]-1), 'merge rank index')
+        pair = (source, rank)
+        require(pair not in seen, 'duplicate merge token')
+        seen.add(pair)
+    require(len(seen) == sum(lengths), 'incomplete merge word')
+
+
+def validate_cut(c: dict[str, Any], value: Any, message: str) -> tuple[int, int]:
+    """Return a strictly typed interior source-rank cut."""
+    lengths = c['lengths']
+    require(type(value) is list and len(value) == 2, message)
+    source = value[0]
+    require(integer(source, 0, len(lengths)-1), message)
+    rank = value[1]
+    require(integer(rank, 1, lengths[source]-1), message)
+    return source, rank
+
+
+def validate_cut_list(c: dict[str, Any], value: Any, message: str) -> list[tuple[int, int]]:
+    """Require a canonical, duplicate-free JSON list of strict integer cuts."""
+    require(type(value) is list, message)
+    pairs = [validate_cut(c, cut, message) for cut in value]
+    require(len(pairs) <= sum(n-1 for n in c['lengths']), message)
+    require(len(set(pairs)) == len(pairs), message)
+    require(pairs == sorted(pairs), message)
+    return pairs
+
+
+def validate_witness_header(c: dict[str, Any], w: Any) -> tuple[int, int, dict[str, int]]:
+    """Validate cut and declared-query endpoint fields before any comparison/use."""
+    require(type(w) is dict and set(w) == {'cut','query','time','actions','left','right'}, 'witness fields')
+    source, rank = validate_cut(c, w['cut'], 'witness cut')
+    require(integer(w['query'], 0, len(c['queries'])-1), 'witness query')
+    require(integer(w['time'], 1, c['horizon']), 'witness endpoint')
+    query = c['queries'][w['query']]
+    require(w['time'] == query['time'], 'witness endpoint')
+    require(type(w['actions']) is list and len(w['actions']) == w['time'], 'witness endpoint')
+    return source, rank, query
+
+
 def wellformed(c: dict[str, Any]) -> None:
     require(type(c) is dict and set(c) == {'id','classes','horizon','lengths','disciplines','policy','weights','sink_capacity','environment','queries','library','workload'}, 'model fields')
     require(type(c['id']) is str and 0 < len(c['id']) <= 80, 'model identifier')
@@ -147,12 +197,8 @@ def packet_replay(c, rows, actions):
 
 
 def check_witness(c,w,records,word,layers):
-    require(type(w) is dict and set(w) == {'cut','query','time','actions','left','right'}, 'witness fields')
-    require(type(w['cut']) is list and len(w['cut']) == 2 and tuple(w['cut']) in {(g,r) for _,_,g,r in records}, 'witness cut')
-    require(integer(w['query'],0,len(c['queries'])-1), 'witness query')
-    q = c['queries'][w['query']]
-    require(w['time'] == q['time'] and type(w['actions']) is list and len(w['actions']) == q['time'], 'witness endpoint')
-    g,r = w['cut']
+    g,r,q = validate_witness_header(c,w)
+    require((g,r) in {(gg,rr) for _,_,gg,rr in records}, 'witness cut')
     require((q['time'],w['query'],g,r) in records, 'witness is a query boundary')
     earliest = min(t for t,_,gg,rr in records if (gg,rr)==(g,r))
     require(w['time'] == earliest, 'witness must reach the earliest query exposing this cut')
@@ -183,6 +229,7 @@ def check(c,cert,max_transitions=40000):
     common = {'case','merge_word','layers','required','status'}
     require(status in ('adequate','insufficient_library'), 'certificate status')
     require(set(cert) == common | ({'cuts','witnesses'} if status=='adequate' else {'earliest_failure','witness'}), 'certificate fields')
+    validate_merge_word(c, cert['merge_word'])
     word = order(c)
     require(cert['merge_word'] == word, 'merge word')
     raw = cert['layers']
@@ -207,23 +254,29 @@ def check(c,cert,max_transitions=40000):
         require(layers[t+1] == image, 'inexact reachable layer')
     records = boundary_records(c,layers,word)
     needed = [list(v) for v in sorted({(g,r) for _,_,g,r in records})]
+    validate_cut_list(c, cert['required'], 'required cuts')
     require(cert['required'] == needed, 'required cuts')
     missing = [v for v in records if [v[2],v[3]] not in c['library']]
     ticks = 0
     earlier_checks = 0
     if status == 'adequate':
+        validate_cut_list(c, cert['cuts'], 'candidate cuts')
         require(not missing and cert['cuts'] == needed, 'inadequate or nonleast candidate')
         ws = cert['witnesses']
         require(type(ws) is list and len(ws) == len(needed), 'necessity witnesses')
-        require([w.get('cut') for w in ws if type(w) is dict] == needed, 'witness coverage')
+        witness_cuts = [[g,r] for g,r,_ in (validate_witness_header(c,w) for w in ws)]
+        require(witness_cuts == needed, 'witness coverage')
         for w in ws:
             replay_ticks,prior = check_witness(c,w,records,word,layers)
             ticks += replay_ticks; earlier_checks += prior
     else:
         require(bool(missing), 'false insufficiency')
         earliest = min(v[0] for v in missing)
-        require(cert['earliest_failure'] == earliest and cert['witness'].get('time') == earliest, 'shortest failing query time')
-        require(cert['witness'].get('cut') not in c['library'], 'failure cut must be unavailable')
-        replay_ticks,prior = check_witness(c,cert['witness'],records,word,layers)
+        require(integer(cert['earliest_failure'], 1, c['horizon']), 'earliest failure endpoint')
+        witness = cert['witness']
+        g,r,_ = validate_witness_header(c,witness)
+        require(cert['earliest_failure'] == earliest and witness['time'] == earliest, 'shortest failing query time')
+        require([g,r] not in c['library'], 'failure cut must be unavailable')
+        replay_ticks,prior = check_witness(c,witness,records,word,layers)
         ticks += replay_ticks; earlier_checks += prior
     return {'states':sum(map(len,layers)),'transitions':transitions,'witness_replay_ticks':ticks,'earlier_query_checks':earlier_checks}

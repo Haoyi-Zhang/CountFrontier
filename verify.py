@@ -171,6 +171,7 @@ def main() -> None:
             run(work, "tests/exhaustive_frontier_audit.py", expected="all_exhaustive_micro_audits_passed"),
             run(work, "tests/restricted_negative.py", expected="passed"),
             run(work, "tests/fixed_interpreter_audit.py", expected="all_fixed_interpreter_audits_passed"),
+            run(work, "tests/frontier_integer_contract.py", expected="strict_frontier_integer_contract_passed"),
         ]
         source = source_audit(work)
         parsed = parse_all(work)
