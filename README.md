@@ -24,7 +24,7 @@ python compare_results.py results/observed results/reproduced
 For a single isolated command that also runs the certificate CLI, all retained
 pilots, the exhaustive frontier audit, the restricted negative-certificate
 regression, the full fixed-interpreter cross-check, the strict frontier-certificate
-integer-contract regression, and JSON/CSV parsing, use:
+integer-contract regressions, and JSON/CSV parsing, use:
 
 ```sh
 python verify.py
@@ -46,6 +46,30 @@ witness cuts, witness query/time fields, and `earliest_failure` are rejected bef
 numeric decoding. These directed checks are additional regressions; they do not
 change the retained count of 23 campaign mutations or two incomplete controls.
 
+`tests/fixed_restricted_integer_contract.py` checks the corresponding fixed and
+restricted certificate fields. All 64 binary words in the six-position FIFO
+example decode from the certified block indices and coefficients exactly as
+direct colored execution does. Its 42 fixed-positive, four fixed-negative and
+15 restricted malformed-field variants must raise the checker's rejection
+exception, rather than accept numerically equal floats/booleans or fail later
+on a slice index. These are separate directed regressions, not additions to the
+retained campaign's 23 mutations.
+
+For raw outputs and a retained isolation directory, use new, absent paths:
+
+```sh
+python -B verify.py --work-dir /tmp/countcuts-check --logs /tmp/countcuts-output
+```
+
+The verifier parses every Python source without producing bytecode, sets UTF-8
+and bytecode-free execution for its subprocesses, and retains each command's raw
+stdout/stderr when `--logs` is supplied. It bounds each command to 60 seconds.
+The prepared `.github/workflows/scientific-checks.yml` runs the whole verifier
+from this flat artifact-repository root on Ubuntu 24.04, with one CPU, a
+240-second whole-run timeout, a 2-GiB virtual-memory limit and a 110-second
+per-process CPU limit. Raw outputs are uploaded even when a check fails; failures
+remain failing gates. Preparing that workflow does not establish a remote run.
+
 The output directory must be new. The expected result is
 `all_finite_checks_passed`: 51 fixed-schedule, eight symbolic-frontier and 19
 restricted-support main cases; 51 adequate and 27 insufficient eligible
@@ -58,6 +82,12 @@ comparison requires all deterministic scientific JSON and table content to match
 A clean reproduction performed for this delivery is recorded in
 `results/clean_reproduction.json`. Generated model dictionaries must equal the
 retained `inputs/cases.json` before a run proceeds.
+
+The observations in `results/observed` and `results/clean_reproduction.json` are
+retained historical host executions. Their CPU/RSS values are not measurements
+of the current checker revision on every platform. Windows function-level
+replays can test the finite semantics but do not execute the POSIX resource
+guards in `reproduce.py`, the CLI or the three development-pilot entry points.
 
 ## Synthesize and check a certificate
 
