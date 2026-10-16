@@ -8,6 +8,12 @@ network analyzer, a Count-Buffy implementation, or a verified compiler.
 
 ## Reproduce the main scientific results
 
+The optional paper renderer `scripts/draw_schematics.py` generates the two
+embedded-font vector schematics in `figures/`. Install
+`scripts/requirements-schematics.txt` for rendering, then run the script or use
+`--check` to compare regenerated files. Scientific execution remains independent
+of plotting packages.
+
 Use Python 3.10 or later on a POSIX/Linux environment with the standard library.
 No Python package installation, network, solver, GPU, account, API, or external
 input is needed. Run from this repository root. The runner uses one CPU worker,
