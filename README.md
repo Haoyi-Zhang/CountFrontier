@@ -204,7 +204,7 @@ the retained control and extendibility contract, not unbounded shortest traces.
 - `results/clean_reproduction.json`: clean-extraction comparison and measurements.
 - `results/measurements/linux-37438859887.json`: current Linux execution and scientific-correspondence receipt; separate from historical measurements.
 - `claim_evidence_ledger.csv`: theorem/test/data support for material claims.
-- `reference_audit.csv`: publisher/first-party identifier and manuscript-role audit for every cited bibliography entry.
+- `reference_audit.csv`: publisher/first-party identifier and manuscript-role audit for the retained 30-reference subset of the current 50-entry bibliography. The sibling `../paper/build.py` checks current citation/BibTeX/printed-bibliography key closure and the retained rows' metadata; the other 20 references do not have metadata or manuscript-role audit rows in this retained CSV.
 - `external_resources.csv`, `literature.csv`: lawful provenance and reading scope.
 - `proofs/arguments.md`, `tests/`: general arguments and finite development checks.
 
